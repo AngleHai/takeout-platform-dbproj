@@ -78,8 +78,8 @@
 
   const loginConfig = useStorage('login-config', {
     rememberPassword: true,
-    username: '张三',
-    password: '123456',
+    username: '',
+    password: '',
   });
   const userInfo = reactive({
     username: loginConfig.value.username,
@@ -98,16 +98,7 @@
       setLoading(true);
       try {
         await userStore.login(values as LoginData);
-        const { redirect, ...othersQuery } = router.currentRoute.value.query;
-        console.log(values);
-        console.log('redirect', redirect);
-        console.log('othersQuery', othersQuery);
-        router.push({
-          name: (redirect as string) || 'Workplace',
-          query: {
-            ...othersQuery,
-          },
-        });
+        router.push({ name: 'Workplace' });
         Message.success(t('login.form.login.success'));
         const { rememberPassword } = loginConfig.value;
         const { username, password } = values;

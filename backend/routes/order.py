@@ -319,6 +319,10 @@ def assign_delivery():
         phone_row = execute_query(conn, phone_query, (customer_id,), fetch_one=True)
         customer_phone = phone_row[0] if phone_row else None
 
+        # 清理可能残留的旧配送记录（取消后重新指派的情况）
+        delete_old = "DELETE FROM logistics WHERE OrderID = %s"
+        execute_query(conn, delete_old, (order_id,))
+
         # 创建配送记录（触发器会自动更新配送员状态和订单状态）
         insert_logistics = """
             INSERT INTO logistics (OrderID, DeliverymanID, EstimatedTime, IsDelivered, CustomerPhone)

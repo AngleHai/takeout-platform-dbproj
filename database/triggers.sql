@@ -76,7 +76,7 @@ END;;
 DELIMITER ;
 
 -- ============================================================
--- 触发器5: 订单取消时，如果有配送记录，释放配送员
+-- 触发器5: 订单取消时，回退销量 + 释放配送员
 -- ============================================================
 DROP TRIGGER IF EXISTS `trg_orders_after_update`;
 DELIMITER ;;
@@ -85,9 +85,16 @@ AFTER UPDATE ON `orders`
 FOR EACH ROW
 BEGIN
   IF NEW.`DeliveryStatus` = '已取消' AND OLD.`DeliveryStatus` != '已取消' THEN
-    UPDATE `deliveryman` d
-    INNER JOIN `logistics` l ON l.`DeliverymanID` = d.`UserID`
-    SET d.`WorkStatus` = '空闲'
+    -- 回退该订单所有菜品的销量
+    UPDATE `dish` d
+    INNER JOIN `order_dish` od ON d.`DishID` = od.`DishID`
+    SET d.`TotalSales` = d.`TotalSales` - od.`Quantity`
+    WHERE od.`OrderID` = NEW.`OrderID`;
+
+    -- 如果有配送记录，释放配送员
+    UPDATE `deliveryman` dm
+    INNER JOIN `logistics` l ON l.`DeliverymanID` = dm.`UserID`
+    SET dm.`WorkStatus` = '空闲'
     WHERE l.`OrderID` = NEW.`OrderID` AND l.`IsDelivered` = FALSE;
   END IF;
 END;;
