@@ -75,3 +75,7 @@ export function assignDelivery(data: {
 export function confirmDelivery(data: { orderId: string }) {
   return axios.post('/api/order/deliver', data);
 }
+
+export function updateOrderAddress(data: { orderId: string; addressId: string }) {
+  return axios.post('/api/order/update-address', data);
+}

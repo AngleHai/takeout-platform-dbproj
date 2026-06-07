@@ -208,26 +208,35 @@ def create_order():
                 return fail_response(None, '所有菜品必须来自同一商家', 40000)
             total_amount += float(dish_info[0]) * item['quantity']
 
-        # 生成订单ID
-        id_query = "SELECT MAX(OrderID) FROM orders"
-        max_id = execute_query(conn, id_query, fetch_one=True)
-        if max_id and max_id[0]:
-            new_num = int(max_id[0][1:]) + 1
-        else:
-            new_num = 1
-        new_order_id = f"O{new_num:07d}"
+        # 生成订单ID（使用 SELECT ... FOR UPDATE 防止并发冲突）
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT MAX(OrderID) FROM orders FOR UPDATE")
+            max_id = cursor.fetchone()
+            if max_id and max_id[0]:
+                new_num = int(max_id[0][1:]) + 1
+            else:
+                new_num = 1
+            new_order_id = f"O{new_num:07d}"
 
-        # 插入订单
-        insert_order = """
-            INSERT INTO orders (OrderID, CustomerID, MerchantID, AddressID, OrderAmount, PaymentMethod, OrderTime, DeliveryStatus)
-            VALUES (%s, %s, %s, %s, %s, %s, NOW(), '已接单')
-        """
-        execute_query(conn, insert_order, (new_order_id, customer_id, merchant_id, address_id, total_amount, payment_method))
+            # 插入订单
+            insert_order = """
+                INSERT INTO orders (OrderID, CustomerID, MerchantID, AddressID, OrderAmount, PaymentMethod, OrderTime, DeliveryStatus)
+                VALUES (%s, %s, %s, %s, %s, %s, NOW(), '已接单')
+            """
+            cursor.execute(insert_order, (new_order_id, customer_id, merchant_id, address_id, total_amount, payment_method))
 
-        # 插入订单-菜品关联
-        for item in dishes:
-            insert_od = "INSERT INTO order_dish (OrderID, DishID, Quantity) VALUES (%s, %s, %s)"
-            execute_query(conn, insert_od, (new_order_id, item['dishId'], item['quantity']))
+            # 插入订单-菜品关联
+            for item in dishes:
+                insert_od = "INSERT INTO order_dish (OrderID, DishID, Quantity) VALUES (%s, %s, %s)"
+                cursor.execute(insert_od, (new_order_id, item['dishId'], item['quantity']))
+
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise e
+        finally:
+            cursor.close()
 
         return success_response({'orderId': new_order_id, 'orderAmount': total_amount}, '下单成功')
     except Exception as e:
@@ -356,3 +365,45 @@ def confirm_delivery():
     except Exception as e:
         current_app.logger.error(f"确认送达错误: {e}")
         return fail_response(None, f'操作失败: {str(e)}', 50000)
+
+
+@order_bp.route('/order/update-address', methods=['POST'])
+@token_required
+@role_required('顾客')
+def update_order_address():
+    """顾客修改订单收货地址（仅限已接单状态）"""
+    conn = get_db_connection()
+    if not conn:
+        return fail_response(None, '数据库连接失败', 50000)
+
+    try:
+        data = request.get_json()
+        order_id = data.get('orderId')
+        address_id = data.get('addressId')
+        customer_id = request.user.get('UserID')
+
+        if not all([order_id, address_id]):
+            return fail_response(None, '订单ID和地址ID不能为空', 40000)
+
+        # 验证订单属于该顾客且状态为已接单
+        check_query = "SELECT DeliveryStatus FROM orders WHERE OrderID = %s AND CustomerID = %s"
+        order_row = execute_query(conn, check_query, (order_id, customer_id), fetch_one=True)
+        if not order_row:
+            return fail_response(None, '订单不存在或无权操作', 40300)
+        if order_row[0] != '已接单':
+            return fail_response(None, '当前状态不可修改地址', 40000)
+
+        # 验证地址属于该顾客
+        addr_check = "SELECT AddressID FROM address WHERE AddressID = %s AND CustomerID = %s"
+        addr_exists = execute_query(conn, addr_check, (address_id, customer_id), fetch_one=True)
+        if not addr_exists:
+            return fail_response(None, '收货地址无效', 40000)
+
+        # 更新订单地址
+        update_query = "UPDATE orders SET AddressID = %s WHERE OrderID = %s"
+        execute_query(conn, update_query, (address_id, order_id))
+
+        return success_response(None, '地址修改成功')
+    except Exception as e:
+        current_app.logger.error(f"修改订单地址错误: {e}")
+        return fail_response(None, f'修改失败: {str(e)}', 50000)

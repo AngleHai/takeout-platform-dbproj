@@ -45,16 +45,15 @@ axios.interceptors.response.use(
         content: res.msg || 'Error',
         duration: 5 * 1000,
       });
-      // 50008: Illegal token; 50012: Other clients logged in; 50014: Token expired;
+      // 40100: token缺失; 40101: token过期; 40102: token无效
       if (
-        [50008, 50012, 50014].includes(res.code) &&
+        [40100, 40101, 40102].includes(res.code) &&
         response.config.url !== '/api/user/info'
       ) {
         Modal.error({
-          title: 'Confirm logout',
-          content:
-            'You have been logged out, you can cancel to stay on this page, or log in again',
-          okText: 'Re-Login',
+          title: '登录已过期',
+          content: '您的登录状态已失效，请重新登录',
+          okText: '重新登录',
           async onOk() {
             const userStore = useUserStore();
 

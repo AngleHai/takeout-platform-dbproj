@@ -61,19 +61,3 @@ def execute_query(conn, query, params=None, fetch_one=False, fetch_all=False):
             cursor.close()
 
 
-def init_db():
-    """检查数据库连接是否正常"""
-    try:
-        conn = mysql.connector.connect(
-            host=Config.DB_HOST if hasattr(Config, 'DB_HOST') else 'localhost',
-            user='root',
-            password='123456',
-            database='takeout'
-        )
-        cursor = conn.cursor()
-        cursor.execute("SELECT 1")
-        cursor.close()
-        conn.close()
-        logger.info("数据库连接检查通过")
-    except Error as err:
-        logger.error(f"数据库连接检查失败: {err}")

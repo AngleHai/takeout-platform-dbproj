@@ -42,15 +42,21 @@
     </a-card>
 
     <!-- 下单对话框 -->
-    <a-modal v-model:visible="cartVisible" title="确认下单" @ok="handleSubmitOrder">
+    <a-modal v-model:visible="cartVisible" title="确认下单" :width="520" @ok="handleSubmitOrder">
       <a-form :model="orderForm">
         <a-form-item label="已选菜品">
-          <div v-for="item in cart" :key="item.dishId" style="margin-bottom: 8px">
-            {{ item.dishName }} × {{ item.quantity }} = ¥{{ (item.price * item.quantity).toFixed(2) }}
+          <div class="cart-list">
+            <div v-for="item in cart" :key="item.dishId" class="cart-item">
+              <span class="cart-item-name">{{ item.dishName }}</span>
+              <span class="cart-item-qty">× {{ item.quantity }}</span>
+              <span class="cart-item-price">¥{{ (item.price * item.quantity).toFixed(2) }}</span>
+            </div>
           </div>
-          <a-divider />
-          <strong>合计：¥{{ cartTotal.toFixed(2) }}</strong>
         </a-form-item>
+        <a-divider style="margin: 4px 0 12px" />
+        <div style="text-align: right; margin-bottom: 16px">
+          <strong>合计：¥{{ cartTotal.toFixed(2) }}</strong>
+        </div>
         <a-form-item label="收货地址">
           <a-select v-model="orderForm.addressId" placeholder="选择地址">
             <a-option v-for="addr in addresses" :key="addr.addressId" :value="addr.addressId">
@@ -187,5 +193,35 @@
 <style scoped lang="less">
   .container {
     padding: 20px;
+  }
+
+  .cart-list {
+    width: 100%;
+  }
+
+  .cart-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    line-height: 1.5;
+  }
+
+  .cart-item-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cart-item-qty {
+    width: 50px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .cart-item-price {
+    width: 80px;
+    text-align: right;
+    flex-shrink: 0;
   }
 </style>

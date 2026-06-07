@@ -18,6 +18,15 @@
         <a-descriptions-item label="收货地址">
           {{ order.receiverName }} {{ order.receiverPhone }}<br/>
           {{ order.detailAddress }}
+          <a-button
+            v-if="canChangeAddress"
+            type="text"
+            size="small"
+            style="margin-left: 8px"
+            @click="openChangeAddress"
+          >
+            修改地址
+          </a-button>
         </a-descriptions-item>
       </a-descriptions>
 
@@ -41,17 +50,38 @@
         </a-descriptions>
       </template>
     </a-card>
+
+    <!-- 修改地址弹窗 -->
+    <a-modal v-model:visible="addressModalVisible" title="修改收货地址" @ok="handleChangeAddress">
+      <a-select v-model="newAddressId" placeholder="选择新地址" style="width: 100%">
+        <a-option v-for="addr in addresses" :key="addr.addressId" :value="addr.addressId">
+          {{ addr.receiverName }} {{ addr.receiverPhone }} - {{ addr.detailAddress }}
+        </a-option>
+      </a-select>
+    </a-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { ref, onMounted } from 'vue';
+  import { ref, computed, onMounted } from 'vue';
   import { useRoute } from 'vue-router';
-  import { getOrderDetail } from '@/api/order';
+  import { Message } from '@arco-design/web-vue';
+  import { getOrderDetail, updateOrderAddress } from '@/api/order';
+  import { getAddressList } from '@/api/address';
+  import { useUserStore } from '@/store';
 
   const route = useRoute();
+  const userStore = useUserStore();
   const loading = ref(false);
   const order = ref<any>(null);
+
+  const addressModalVisible = ref(false);
+  const addresses = ref<any[]>([]);
+  const newAddressId = ref('');
+
+  const canChangeAddress = computed(() => {
+    return userStore.role === '顾客' && order.value?.deliveryStatus === '已接单';
+  });
 
   const dishColumns = [
     { title: '菜品', dataIndex: 'dishName' },
@@ -79,6 +109,31 @@
       order.value = res;
     } finally {
       loading.value = false;
+    }
+  }
+
+  async function openChangeAddress() {
+    const res: any = await getAddressList();
+    addresses.value = res;
+    newAddressId.value = order.value?.addressId || '';
+    addressModalVisible.value = true;
+  }
+
+  async function handleChangeAddress() {
+    if (!newAddressId.value) {
+      Message.warning('请选择地址');
+      return;
+    }
+    try {
+      await updateOrderAddress({
+        orderId: order.value.orderId,
+        addressId: newAddressId.value,
+      });
+      Message.success('地址修改成功');
+      addressModalVisible.value = false;
+      fetchDetail();
+    } catch (e) {
+      // error handled by interceptor
     }
   }
 
