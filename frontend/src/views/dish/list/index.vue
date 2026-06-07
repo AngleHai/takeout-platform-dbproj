@@ -41,11 +41,15 @@
         </template>
         <template #action="{ record }">
           <template v-if="userStore.role === '顾客'">
-            <a-space v-if="getCartQty(record.dishId) > 0" size="mini">
-              <a-button size="small" @click="changeCartQty(record, -1)">-</a-button>
-              <span style="min-width: 20px; text-align: center; display: inline-block">{{ getCartQty(record.dishId) }}</span>
-              <a-button size="small" @click="handleAddToCart(record)">+</a-button>
-            </a-space>
+            <a-input-number
+              v-if="getCartQty(record.dishId) > 0"
+              :model-value="getCartQty(record.dishId)"
+              :min="0"
+              :max="99"
+              size="small"
+              style="width: 120px"
+              @change="(val: number) => setCartQty(record, val)"
+            />
             <a-button
               v-else
               type="primary"
@@ -67,9 +71,14 @@
             <div v-for="item in cart" :key="item.dishId" class="cart-item">
               <span class="cart-item-name">{{ item.dishName }}</span>
               <div class="cart-item-ctrl">
-                <a-button size="mini" @click="changeQty(item, -1)">-</a-button>
-                <span class="cart-item-qty">{{ item.quantity }}</span>
-                <a-button size="mini" @click="changeQty(item, 1)">+</a-button>
+                <a-input-number
+                  :model-value="item.quantity"
+                  :min="1"
+                  :max="99"
+                  size="mini"
+                  style="width: 100px"
+                  @change="(val: number) => setQty(item, val)"
+                />
               </div>
               <span class="cart-item-price">¥{{ (item.price * item.quantity).toFixed(2) }}</span>
               <a-button size="mini" type="text" status="danger" @click="removeFromCart(item)">
@@ -204,6 +213,25 @@
       if (existing.quantity <= 0) {
         cart.value = cart.value.filter((d) => d.dishId !== dish.dishId);
       }
+    }
+  }
+
+  function setCartQty(dish: any, val: number) {
+    if (val <= 0) {
+      cart.value = cart.value.filter((d) => d.dishId !== dish.dishId);
+    } else {
+      const existing = cart.value.find((d) => d.dishId === dish.dishId);
+      if (existing) {
+        existing.quantity = val;
+      }
+    }
+  }
+
+  function setQty(item: any, val: number) {
+    if (val <= 0) {
+      removeFromCart(item);
+    } else {
+      item.quantity = val;
     }
   }
 

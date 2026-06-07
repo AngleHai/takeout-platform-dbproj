@@ -104,6 +104,10 @@
       Message.warning('请填写完整信息');
       return;
     }
+    if (!/^1\d{10}$/.test(form.receiverPhone)) {
+      Message.warning('请输入正确的11位手机号');
+      return;
+    }
     try {
       if (isEdit.value) {
         await updateAddress({

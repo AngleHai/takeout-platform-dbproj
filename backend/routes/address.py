@@ -58,6 +58,10 @@ def add_address():
         if not all([receiver_name, receiver_phone, detail_address]):
             return fail_response(None, '收货人、电话、地址不能为空', 40000)
 
+        import re
+        if not re.match(r'^1\d{10}$', receiver_phone):
+            return fail_response(None, '联系电话格式不正确，需为11位手机号', 40000)
+
         # 生成地址ID
         id_query = "SELECT MAX(AddressID) FROM address"
         max_id = execute_query(conn, id_query, fetch_one=True)
@@ -112,6 +116,10 @@ def update_address():
             if field in data:
                 updates.append(f"{col} = %s")
                 params.append(data[field])
+
+        import re
+        if 'receiverPhone' in data and not re.match(r'^1\d{10}$', data['receiverPhone']):
+            return fail_response(None, '联系电话格式不正确，需为11位手机号', 40000)
 
         if 'isDefault' in data and data['isDefault']:
             execute_query(conn, "UPDATE address SET IsDefault = FALSE WHERE CustomerID = %s", (customer_id,))
