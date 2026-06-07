@@ -96,8 +96,6 @@ CREATE TABLE `dish` (
   `TotalSales` INT           NOT NULL  DEFAULT 0 COMMENT '总销量',
   `MerchantID` CHAR(8)       NOT NULL  COMMENT '所属商家ID',
   PRIMARY KEY (`DishID`),
-  CONSTRAINT `fk_dish_merchant` FOREIGN KEY (`MerchantID`) REFERENCES `merchant`(`UserID`)
-    ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `chk_price` CHECK (`Price` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -114,7 +112,6 @@ CREATE TABLE `orders` (
   `OrderTime`      DATETIME      NOT NULL  COMMENT '下单时间',
   `DeliveryStatus` VARCHAR(20)   NOT NULL  DEFAULT '已接单' COMMENT '配送状态',
   PRIMARY KEY (`OrderID`),
-  CONSTRAINT `fk_order_merchant` FOREIGN KEY (`MerchantID`) REFERENCES `merchant`(`UserID`),
   CONSTRAINT `chk_order_amount`  CHECK (`OrderAmount` >= 0),
   CONSTRAINT `chk_delivery_status` CHECK (`DeliveryStatus` IN ('已接单', '配送中', '已完成', '已取消'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -129,7 +126,6 @@ CREATE TABLE `order_dish` (
   PRIMARY KEY (`OrderID`, `DishID`),
   CONSTRAINT `fk_od_order` FOREIGN KEY (`OrderID`) REFERENCES `orders`(`OrderID`)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_od_dish`  FOREIGN KEY (`DishID`) REFERENCES `dish`(`DishID`),
   CONSTRAINT `chk_quantity` CHECK (`Quantity` > 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

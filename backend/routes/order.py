@@ -147,9 +147,9 @@ def get_order_detail():
 
         # 配送信息
         logistics_query = """
-            SELECT l.DeliverymanID, u.UserName, l.EstimatedTime, l.IsDelivered, l.CustomerPhone
+            SELECT l.DeliverymanID, IFNULL(u.UserName, '已注销'), l.EstimatedTime, l.IsDelivered, l.CustomerPhone
             FROM logistics l
-            JOIN user u ON l.DeliverymanID = u.UserID
+            LEFT JOIN user u ON l.DeliverymanID = u.UserID
             WHERE l.OrderID = %s
         """
         log_row = execute_query(conn, logistics_query, (order_id,), fetch_one=True)

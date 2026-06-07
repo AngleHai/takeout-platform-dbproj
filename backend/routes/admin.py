@@ -114,6 +114,10 @@ def delete_user():
             execute_query(conn, "DELETE FROM address WHERE CustomerID = %s", (user_id,))
             execute_query(conn, "DELETE FROM customer WHERE UserID = %s", (user_id,))
         elif role == '商家':
+            # 清理该商家订单的物流记录
+            execute_query(conn, "DELETE FROM logistics WHERE OrderID IN (SELECT OrderID FROM orders WHERE MerchantID = %s)", (user_id,))
+            # 历史订单和 order_dish 保留，避免触发器错误回退销量
+            execute_query(conn, "DELETE FROM dish WHERE MerchantID = %s", (user_id,))
             execute_query(conn, "DELETE FROM merchant WHERE UserID = %s", (user_id,))
         elif role == '送餐员':
             execute_query(conn, "DELETE FROM deliveryman WHERE UserID = %s", (user_id,))
