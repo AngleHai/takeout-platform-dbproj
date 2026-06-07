@@ -48,11 +48,11 @@ mysql -u root -p你的密码 --default-character-set=utf8mb4 takeout < D:/你的
 >
 > ⚠️ 把 `D:/你的路径/` 替换成你实际的项目路径
 
-看到只有 `[Warning] Using a password on the command line interface can be insecure.` 就是成功了，有 `ERROR` 才是失败。
+看到有 `ERROR` 说明失败，否则为成功。
 
 ### 第二步：修改数据库密码配置
 
-用编辑器打开 `backend/cfg.py`，把第 12 行的密码改成你自己的：
+用编辑器打开 `backend/cfg.py`，把第 12 行的密码改成你自己的MySQL密码：
 
 ```python
 DB_PASSWORD = "你的MySQL密码"
@@ -97,7 +97,7 @@ npm run dev
 
 ### 第五步：打开浏览器
 
-访问 **http://localhost:5173**，用下面的账号登录。
+访问 http://localhost:5173，用下面的账号登录。
 
 ---
 
