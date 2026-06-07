@@ -81,8 +81,8 @@ def register():
     if phone and (not phone.isdigit() or len(phone) != 11):
         return fail_response(None, '手机号必须是11位数字', 40000)
 
-    if role not in ('顾客', '商家', '配送员'):
-        return fail_response(None, '角色必须是顾客/商家/配送员', 40000)
+    if role not in ('顾客', '商家', '送餐员'):
+        return fail_response(None, '角色必须是顾客/商家/送餐员', 40000)
 
     conn = get_db_connection()
     if not conn:
@@ -120,7 +120,7 @@ def register():
             shop_name = data.get('shopName', username)
             insert_sub = "INSERT INTO merchant (UserID, ShopName) VALUES (%s, %s)"
             execute_query(conn, insert_sub, (new_user_id, shop_name))
-        elif role == '配送员':
+        elif role == '送餐员':
             insert_sub = "INSERT INTO deliveryman (UserID, WorkStatus) VALUES (%s, %s)"
             execute_query(conn, insert_sub, (new_user_id, '空闲'))
 
@@ -167,7 +167,7 @@ def get_user_info():
             sub_info = execute_query(conn, sub_query, (user_id,), fetch_one=True)
             if sub_info:
                 user_info['shopName'] = sub_info[0]
-        elif role == '配送员':
+        elif role == '送餐员':
             sub_query = "SELECT WorkStatus FROM deliveryman WHERE UserID = %s"
             sub_info = execute_query(conn, sub_query, (user_id,), fetch_one=True)
             if sub_info:

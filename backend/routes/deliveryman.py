@@ -10,7 +10,7 @@ deliveryman_bp = Blueprint('deliveryman', __name__)
 @token_required
 @role_required('商家')
 def get_available_deliverymen():
-    """获取空闲配送员列表"""
+    """获取空闲送餐员列表"""
     conn = get_db_connection()
     if not conn:
         return fail_response(None, '数据库连接失败', 50000)
@@ -32,5 +32,5 @@ def get_available_deliverymen():
 
         return success_response(result)
     except Exception as e:
-        current_app.logger.error(f"获取配送员列表错误: {e}")
+        current_app.logger.error(f"获取送餐员列表错误: {e}")
         return fail_response(None, '服务器内部错误', 50000)

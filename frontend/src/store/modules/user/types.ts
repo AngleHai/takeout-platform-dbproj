@@ -1,4 +1,4 @@
-export type RoleType = '' | '*' | '顾客' | '商家' | '配送员' | '管理员';
+export type RoleType = '' | '*' | '顾客' | '商家' | '送餐员' | '管理员';
 export interface UserState {
   name?: string;
   userId?: string;

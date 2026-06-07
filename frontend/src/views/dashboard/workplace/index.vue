@@ -23,15 +23,15 @@
             />
             <template #actions>
               <a-button type="primary" size="small" @click="$router.push('/order/list')">
-                去指派配送员
+                去指派送餐员
               </a-button>
             </template>
           </a-list-item>
         </a-list>
       </a-card>
 
-      <!-- 配送员：配送中的订单 -->
-      <a-card v-if="userStore.role === '配送员'" class="general-card" title="正在配送的订单">
+      <!-- 送餐员：配送中的订单 -->
+      <a-card v-if="userStore.role === '送餐员'" class="general-card" title="正在配送的订单">
         <template #extra>
           <a-button type="text" @click="$router.push('/order/list')">查看全部订单</a-button>
         </template>
@@ -83,10 +83,10 @@
               </a-list-item>
               <a-list-item>
                 <a-typography-text bold>商家</a-typography-text>
-                ：管理菜品（增删改）、查看订单、指派配送员
+                ：管理菜品（增删改）、查看订单、指派送餐员
               </a-list-item>
               <a-list-item>
-                <a-typography-text bold>配送员</a-typography-text>
+                <a-typography-text bold>送餐员</a-typography-text>
                 ：查看配送任务、确认送达
               </a-list-item>
             </a-list>
@@ -111,7 +111,7 @@
       const res: any = await getOrderList({ status: '已接单', pageSize: 5 });
       pendingOrders.value = res.list || [];
     }
-    if (userStore.role === '配送员') {
+    if (userStore.role === '送餐员') {
       const res: any = await getOrderList({ status: '配送中', pageSize: 5 });
       deliveringOrders.value = res.list || [];
     }

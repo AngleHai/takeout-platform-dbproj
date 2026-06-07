@@ -32,7 +32,7 @@ def get_order_list():
         elif role == '商家':
             conditions.append("o.MerchantID = %s")
             params.append(user_id)
-        elif role == '配送员':
+        elif role == '送餐员':
             conditions.append("l.DeliverymanID = %s")
             params.append(user_id)
 
@@ -42,9 +42,9 @@ def get_order_list():
 
         where_clause = "WHERE " + " AND ".join(conditions) if conditions else ""
 
-        # 配送员需要 JOIN logistics
+        # 送餐员需要 JOIN logistics
         join_clause = ""
-        if role == '配送员':
+        if role == '送餐员':
             join_clause = "LEFT JOIN logistics l ON o.OrderID = l.OrderID"
 
         # 总数
@@ -283,7 +283,7 @@ def cancel_order():
 @token_required
 @role_required('商家')
 def assign_delivery():
-    """商家为订单指派配送员"""
+    """商家为订单指派送餐员"""
     conn = get_db_connection()
     if not conn:
         return fail_response(None, '数据库连接失败', 50000)
@@ -295,7 +295,7 @@ def assign_delivery():
         merchant_id = request.user.get('UserID')
 
         if not all([order_id, deliveryman_id]):
-            return fail_response(None, '订单ID和配送员ID不能为空', 40000)
+            return fail_response(None, '订单ID和送餐员ID不能为空', 40000)
 
         # 验证订单属于该商家且状态为已接单
         check_query = "SELECT DeliveryStatus, CustomerID FROM orders WHERE OrderID = %s AND MerchantID = %s"
@@ -305,13 +305,13 @@ def assign_delivery():
         if order_row[0] != '已接单':
             return fail_response(None, '该订单已指派或已完成', 40000)
 
-        # 验证配送员存在且空闲
+        # 验证送餐员存在且空闲
         dm_check = "SELECT WorkStatus FROM deliveryman WHERE UserID = %s"
         dm_row = execute_query(conn, dm_check, (deliveryman_id,), fetch_one=True)
         if not dm_row:
-            return fail_response(None, '配送员不存在', 40400)
+            return fail_response(None, '送餐员不存在', 40400)
         if dm_row[0] != '空闲':
-            return fail_response(None, '该配送员当前不可用', 40000)
+            return fail_response(None, '该送餐员当前不可用', 40000)
 
         # 获取顾客电话
         customer_id = order_row[1]
@@ -323,7 +323,7 @@ def assign_delivery():
         delete_old = "DELETE FROM logistics WHERE OrderID = %s"
         execute_query(conn, delete_old, (order_id,))
 
-        # 创建配送记录（触发器会自动更新配送员状态和订单状态）
+        # 创建配送记录（触发器会自动更新送餐员状态和订单状态）
         insert_logistics = """
             INSERT INTO logistics (OrderID, DeliverymanID, EstimatedTime, IsDelivered, CustomerPhone)
             VALUES (%s, %s, DATE_ADD(NOW(), INTERVAL 30 MINUTE), FALSE, %s)
@@ -332,15 +332,15 @@ def assign_delivery():
 
         return success_response(None, '指派成功')
     except Exception as e:
-        current_app.logger.error(f"指派配送员错误: {e}")
+        current_app.logger.error(f"指派送餐员错误: {e}")
         return fail_response(None, f'指派失败: {str(e)}', 50000)
 
 
 @order_bp.route('/order/deliver', methods=['POST'])
 @token_required
-@role_required('配送员')
+@role_required('送餐员')
 def confirm_delivery():
-    """配送员确认送达"""
+    """送餐员确认送达"""
     conn = get_db_connection()
     if not conn:
         return fail_response(None, '数据库连接失败', 50000)
@@ -361,7 +361,7 @@ def confirm_delivery():
         if log_row[0]:
             return fail_response(None, '该订单已送达', 40000)
 
-        # 更新送达状态（触发器会自动更新订单状态和配送员状态）
+        # 更新送达状态（触发器会自动更新订单状态和送餐员状态）
         update_query = "UPDATE logistics SET IsDelivered = TRUE WHERE OrderID = %s"
         execute_query(conn, update_query, (order_id,))
 

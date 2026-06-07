@@ -27,10 +27,10 @@ CREATE TABLE `user` (
   `UserName` CHAR(20)     NOT NULL  COMMENT '用户名',
   `Password` VARCHAR(20)  NOT NULL  COMMENT '密码，最少6位',
   `Phone`    CHAR(13)     DEFAULT NULL COMMENT '电话',
-  `Role`     CHAR(10)     NOT NULL  COMMENT '角色：顾客/商家/配送员',
+  `Role`     CHAR(10)     NOT NULL  COMMENT '角色：顾客/商家/送餐员',
   PRIMARY KEY (`UserID`),
   CONSTRAINT `chk_password_len` CHECK (CHAR_LENGTH(`Password`) >= 6),
-  CONSTRAINT `chk_role` CHECK (`Role` IN ('顾客', '商家', '配送员', '管理员'))
+  CONSTRAINT `chk_role` CHECK (`Role` IN ('顾客', '商家', '送餐员', '管理员'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
@@ -60,7 +60,7 @@ CREATE TABLE `merchant` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- 4. 配送员表 Deliveryman（继承 User）
+-- 4. 送餐员表 Deliveryman（继承 User）
 -- ============================================================
 CREATE TABLE `deliveryman` (
   `UserID`     CHAR(8)   NOT NULL  COMMENT '用户ID/主键/外键',
@@ -140,7 +140,7 @@ CREATE TABLE `order_dish` (
 -- ============================================================
 CREATE TABLE `logistics` (
   `OrderID`        CHAR(8)  NOT NULL COMMENT '订单ID/主键/外键',
-  `DeliverymanID`  CHAR(8)  NOT NULL COMMENT '配送员ID',
+  `DeliverymanID`  CHAR(8)  NOT NULL COMMENT '送餐员ID',
   `EstimatedTime`  DATETIME DEFAULT NULL COMMENT '预计送达时间',
   `IsDelivered`    BOOLEAN  NOT NULL DEFAULT FALSE COMMENT '是否已送达',
   `CustomerPhone`  CHAR(13) DEFAULT NULL COMMENT '顾客电话',

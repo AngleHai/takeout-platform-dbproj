@@ -10,7 +10,7 @@ const ORDER: AppRouteRecordRaw = {
     requiresAuth: true,
     icon: 'icon-file',
     order: 2,
-    roles: ['顾客', '商家', '配送员', '管理员'],
+    roles: ['顾客', '商家', '送餐员', '管理员'],
   },
   children: [
     {

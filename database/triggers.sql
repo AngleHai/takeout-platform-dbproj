@@ -34,7 +34,7 @@ END;;
 DELIMITER ;
 
 -- ============================================================
--- 触发器3: 配送员送达后自动更新订单状态为"已完成"
+-- 触发器3: 送餐员送达后自动更新订单状态为"已完成"
 -- ============================================================
 DROP TRIGGER IF EXISTS `trg_logistics_after_update`;
 DELIMITER ;;
@@ -47,7 +47,7 @@ BEGIN
     SET `DeliveryStatus` = '已完成'
     WHERE `OrderID` = NEW.`OrderID`;
 
-    -- 同时将配送员状态改为空闲
+    -- 同时将送餐员状态改为空闲
     UPDATE `deliveryman`
     SET `WorkStatus` = '空闲'
     WHERE `UserID` = NEW.`DeliverymanID`;
@@ -56,7 +56,7 @@ END;;
 DELIMITER ;
 
 -- ============================================================
--- 触发器4: 创建配送记录时将配送员状态改为"配送中"
+-- 触发器4: 创建配送记录时将送餐员状态改为"配送中"
 -- ============================================================
 DROP TRIGGER IF EXISTS `trg_logistics_after_insert`;
 DELIMITER ;;
@@ -76,7 +76,7 @@ END;;
 DELIMITER ;
 
 -- ============================================================
--- 触发器5: 订单取消时，回退销量 + 释放配送员
+-- 触发器5: 订单取消时，回退销量 + 释放送餐员
 -- ============================================================
 DROP TRIGGER IF EXISTS `trg_orders_after_update`;
 DELIMITER ;;
@@ -91,7 +91,7 @@ BEGIN
     SET d.`TotalSales` = d.`TotalSales` - od.`Quantity`
     WHERE od.`OrderID` = NEW.`OrderID`;
 
-    -- 如果有配送记录，释放配送员
+    -- 如果有配送记录，释放送餐员
     UPDATE `deliveryman` dm
     INNER JOIN `logistics` l ON l.`DeliverymanID` = dm.`UserID`
     SET dm.`WorkStatus` = '空闲'
@@ -140,7 +140,7 @@ LEFT JOIN `dish` d   ON m.`UserID` = d.`MerchantID`
 GROUP BY m.`UserID`, m.`ShopName`;
 
 -- ============================================================
--- 视图3: 配送员工作统计视图
+-- 视图3: 送餐员工作统计视图
 -- ============================================================
 DROP VIEW IF EXISTS `v_deliveryman_stats`;
 CREATE VIEW `v_deliveryman_stats` AS

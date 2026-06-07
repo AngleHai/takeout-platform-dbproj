@@ -45,7 +45,7 @@
               指派配送
             </a-button>
             <a-popconfirm
-              v-if="userStore.role === '配送员' && record.deliveryStatus === '配送中'"
+              v-if="userStore.role === '送餐员' && record.deliveryStatus === '配送中'"
               content="确认已送达？"
               @ok="handleDeliver(record.orderId)"
             >
@@ -56,10 +56,10 @@
       </a-table>
     </a-card>
 
-    <!-- 指派配送员对话框 -->
-    <a-modal v-model:visible="assignVisible" title="指派配送员" @ok="handleAssign">
-      <a-form-item label="选择配送员">
-        <a-select v-model="assignForm.deliverymanId" placeholder="选择空闲配送员">
+    <!-- 指派送餐员对话框 -->
+    <a-modal v-model:visible="assignVisible" title="指派送餐员" @ok="handleAssign">
+      <a-form-item label="选择送餐员">
+        <a-select v-model="assignForm.deliverymanId" placeholder="选择空闲送餐员">
           <a-option v-for="dm in deliverymen" :key="dm.userId" :value="dm.userId">
             {{ dm.name }} ({{ dm.workStatus }})
           </a-option>
@@ -142,7 +142,7 @@
   async function showAssignModal(orderId: string) {
     assignForm.orderId = orderId;
     assignForm.deliverymanId = '';
-    // 获取空闲配送员列表
+    // 获取空闲送餐员列表
     const res: any = await axios.get('/api/deliveryman/available');
     deliverymen.value = res || [];
     assignVisible.value = true;
@@ -150,7 +150,7 @@
 
   async function handleAssign() {
     if (!assignForm.deliverymanId) {
-      Message.warning('请选择配送员');
+      Message.warning('请选择送餐员');
       return;
     }
     await assignDelivery({ orderId: assignForm.orderId, deliverymanId: assignForm.deliverymanId });

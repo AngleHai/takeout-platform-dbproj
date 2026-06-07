@@ -96,7 +96,7 @@ def delete_user():
             order_check = "SELECT OrderID FROM orders WHERE CustomerID = %s AND DeliveryStatus IN ('已接单', '配送中')"
         elif role == '商家':
             order_check = "SELECT OrderID FROM orders WHERE MerchantID = %s AND DeliveryStatus IN ('已接单', '配送中')"
-        elif role == '配送员':
+        elif role == '送餐员':
             order_check = "SELECT l.OrderID FROM logistics l JOIN orders o ON l.OrderID = o.OrderID WHERE l.DeliverymanID = %s AND o.DeliveryStatus = '配送中'"
         else:
             order_check = None
@@ -112,7 +112,7 @@ def delete_user():
             execute_query(conn, "DELETE FROM customer WHERE UserID = %s", (user_id,))
         elif role == '商家':
             execute_query(conn, "DELETE FROM merchant WHERE UserID = %s", (user_id,))
-        elif role == '配送员':
+        elif role == '送餐员':
             execute_query(conn, "DELETE FROM deliveryman WHERE UserID = %s", (user_id,))
 
         # 删除 user 表

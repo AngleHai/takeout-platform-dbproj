@@ -39,7 +39,7 @@
       <template v-if="order?.logistics">
         <a-divider>配送信息</a-divider>
         <a-descriptions :column="2" bordered>
-          <a-descriptions-item label="配送员">{{ order.logistics.deliverymanName }}</a-descriptions-item>
+          <a-descriptions-item label="送餐员">{{ order.logistics.deliverymanName }}</a-descriptions-item>
           <a-descriptions-item label="预计送达">{{ order.logistics.estimatedTime }}</a-descriptions-item>
           <a-descriptions-item label="顾客电话">{{ order.logistics.customerPhone }}</a-descriptions-item>
           <a-descriptions-item label="是否送达">

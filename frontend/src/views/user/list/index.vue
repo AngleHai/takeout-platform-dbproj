@@ -6,7 +6,7 @@
           <a-select v-model="roleFilter" placeholder="按角色筛选" allow-clear style="width: 120px" @change="fetchUsers">
             <a-option value="顾客">顾客</a-option>
             <a-option value="商家">商家</a-option>
-            <a-option value="配送员">配送员</a-option>
+            <a-option value="送餐员">送餐员</a-option>
             <a-option value="管理员">管理员</a-option>
           </a-select>
           <a-input-search
@@ -72,7 +72,7 @@
     const map: Record<string, string> = {
       '顾客': 'blue',
       '商家': 'green',
-      '配送员': 'orange',
+      '送餐员': 'orange',
       '管理员': 'red',
     };
     return map[role] || 'gray';

@@ -39,7 +39,7 @@
         <a-select v-model="formData.role" placeholder="选择角色">
           <a-option value="顾客">顾客</a-option>
           <a-option value="商家">商家</a-option>
-          <a-option value="配送员">配送员</a-option>
+          <a-option value="送餐员">送餐员</a-option>
         </a-select>
       </a-form-item>
       <a-form-item

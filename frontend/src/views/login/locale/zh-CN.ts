@@ -15,5 +15,5 @@ export default {
   'login.banner.slogan2': 'Vue3 + Flask + MySQL',
   'login.banner.subSlogan2': '前后端分离架构',
   'login.banner.slogan3': '多角色权限管理',
-  'login.banner.subSlogan3': '顾客、商家、配送员',
+  'login.banner.subSlogan3': '顾客、商家、送餐员',
 };
