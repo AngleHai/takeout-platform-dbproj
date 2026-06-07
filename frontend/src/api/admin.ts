@@ -8,3 +8,7 @@ export function getUserList(params: {
 }) {
   return axios.get('/api/admin/users', { params });
 }
+
+export function deleteUser(data: { userId: string }) {
+  return axios.post('/api/admin/delete-user', data);
+}

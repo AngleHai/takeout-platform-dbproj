@@ -9,6 +9,48 @@
         </a-result>
       </a-card>
 
+      <!-- 商家：待指派订单 -->
+      <a-card v-if="userStore.role === '商家'" class="general-card" title="待指派配送的订单">
+        <template #extra>
+          <a-button type="text" @click="$router.push('/order/list')">查看全部订单</a-button>
+        </template>
+        <a-empty v-if="pendingOrders.length === 0" description="暂无待指派订单" />
+        <a-list v-else :bordered="false">
+          <a-list-item v-for="order in pendingOrders" :key="order.orderId">
+            <a-list-item-meta
+              :title="`订单 ${order.orderId}`"
+              :description="`顾客：${order.customerName} | 金额：¥${order.orderAmount.toFixed(2)} | 下单时间：${order.orderTime}`"
+            />
+            <template #actions>
+              <a-button type="primary" size="small" @click="$router.push('/order/list')">
+                去指派配送员
+              </a-button>
+            </template>
+          </a-list-item>
+        </a-list>
+      </a-card>
+
+      <!-- 配送员：配送中的订单 -->
+      <a-card v-if="userStore.role === '配送员'" class="general-card" title="正在配送的订单">
+        <template #extra>
+          <a-button type="text" @click="$router.push('/order/list')">查看全部订单</a-button>
+        </template>
+        <a-empty v-if="deliveringOrders.length === 0" description="暂无配送中订单" />
+        <a-list v-else :bordered="false">
+          <a-list-item v-for="order in deliveringOrders" :key="order.orderId">
+            <a-list-item-meta
+              :title="`订单 ${order.orderId}`"
+              :description="`顾客：${order.customerName} | 金额：¥${order.orderAmount.toFixed(2)} | 下单时间：${order.orderTime}`"
+            />
+            <template #actions>
+              <a-button type="primary" size="small" @click="$router.push('/order/list')">
+                去确认送达
+              </a-button>
+            </template>
+          </a-list-item>
+        </a-list>
+      </a-card>
+
       <a-row :gutter="16">
         <a-col :span="8">
           <a-card class="general-card" title="快捷操作">
@@ -47,10 +89,6 @@
                 <a-typography-text bold>配送员</a-typography-text>
                 ：查看配送任务、确认送达
               </a-list-item>
-              <a-list-item>
-                <a-typography-text bold>管理员</a-typography-text>
-                ：查看所有菜品、订单、管理用户账号
-              </a-list-item>
             </a-list>
           </a-card>
         </a-col>
@@ -60,9 +98,28 @@
 </template>
 
 <script lang="ts" setup>
+  import { ref, onMounted } from 'vue';
   import { useUserStore } from '@/store';
+  import { getOrderList } from '@/api/order';
 
   const userStore = useUserStore();
+  const pendingOrders = ref<any[]>([]);
+  const deliveringOrders = ref<any[]>([]);
+
+  async function fetchPendingOrders() {
+    if (userStore.role === '商家') {
+      const res: any = await getOrderList({ status: '已接单', pageSize: 5 });
+      pendingOrders.value = res.list || [];
+    }
+    if (userStore.role === '配送员') {
+      const res: any = await getOrderList({ status: '配送中', pageSize: 5 });
+      deliveringOrders.value = res.list || [];
+    }
+  }
+
+  onMounted(() => {
+    fetchPendingOrders();
+  });
 </script>
 
 <script lang="ts">

@@ -28,6 +28,21 @@
         <template #role="{ record }">
           <a-tag :color="roleColor(record.role)">{{ record.role }}</a-tag>
         </template>
+        <template #action="{ record }">
+          <a-popconfirm
+            content="确定要删除该用户吗？"
+            @ok="handleDelete(record.userId)"
+          >
+            <a-button
+              v-if="record.role !== '管理员'"
+              type="text"
+              status="danger"
+              size="small"
+            >
+              删除
+            </a-button>
+          </a-popconfirm>
+        </template>
       </a-table>
     </a-card>
   </div>
@@ -35,7 +50,8 @@
 
 <script lang="ts" setup>
   import { ref, reactive, onMounted } from 'vue';
-  import { getUserList } from '@/api/admin';
+  import { Message } from '@arco-design/web-vue';
+  import { getUserList, deleteUser } from '@/api/admin';
 
   const loading = ref(false);
   const userList = ref<any[]>([]);
@@ -49,6 +65,7 @@
     { title: '密码', dataIndex: 'password', width: 120 },
     { title: '电话', dataIndex: 'phone', width: 140 },
     { title: '角色', slotName: 'role', width: 100 },
+    { title: '操作', slotName: 'action', width: 100 },
   ];
 
   function roleColor(role: string) {
@@ -59,6 +76,16 @@
       '管理员': 'red',
     };
     return map[role] || 'gray';
+  }
+
+  async function handleDelete(userId: string) {
+    try {
+      await deleteUser({ userId });
+      Message.success('删除成功');
+      fetchUsers();
+    } catch (e) {
+      // error handled by interceptor
+    }
   }
 
   async function fetchUsers() {

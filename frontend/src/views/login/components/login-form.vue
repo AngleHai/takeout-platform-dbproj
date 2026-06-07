@@ -54,6 +54,9 @@
         <a-button type="primary" html-type="submit" long :loading="loading">
           {{ $t('login.form.login') }}
         </a-button>
+        <a-button type="text" long class="login-form-register-btn" @click="$emit('switchToRegister')">
+          {{ $t('login.form.register') }}
+        </a-button>
       </a-space>
     </a-form>
   </div>
@@ -75,6 +78,8 @@
   const errorMessage = ref('');
   const { loading, setLoading } = useLoading();
   const userStore = useUserStore();
+
+  defineEmits(['switchToRegister']);
 
   const loginConfig = useStorage('login-config', {
     rememberPassword: true,

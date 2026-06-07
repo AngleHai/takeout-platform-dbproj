@@ -1,16 +1,13 @@
 <template>
   <div class="container">
     <div class="logo">
-      <!-- <img
-        alt="logo"
-        src="//p3-armor.byteimg.com/tos-cn-i-49unhts6dw/dfdba5317c0c20ce20e64fac803d52bc.svg~tplv-49unhts6dw-image.image"
-      /> -->
       <div class="logo-text">外卖平台</div>
     </div>
     <LoginBanner />
     <div class="content">
       <div class="content-inner">
-        <LoginForm />
+        <LoginForm v-if="!isRegister" @switch-to-register="isRegister = true" />
+        <RegisterForm v-else @switch-to-login="isRegister = false" />
       </div>
       <div class="footer">
         <Footer />
@@ -20,9 +17,13 @@
 </template>
 
 <script lang="ts" setup>
+  import { ref } from 'vue';
   import Footer from '@/components/footer/index.vue';
   import LoginBanner from './components/banner.vue';
   import LoginForm from './components/login-form.vue';
+  import RegisterForm from './components/register-form.vue';
+
+  const isRegister = ref(false);
 </script>
 
 <style lang="less" scoped>

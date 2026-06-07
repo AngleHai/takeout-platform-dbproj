@@ -78,6 +78,9 @@ def register():
     if len(password) < 6:
         return fail_response(None, '密码至少6位', 40000)
 
+    if phone and (not phone.isdigit() or len(phone) != 11):
+        return fail_response(None, '手机号必须是11位数字', 40000)
+
     if role not in ('顾客', '商家', '配送员'):
         return fail_response(None, '角色必须是顾客/商家/配送员', 40000)
 
