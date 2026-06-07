@@ -10,7 +10,8 @@
 ├── database/          # 数据库脚本
 │   ├── init.sql       # 建表语句
 │   ├── data.sql       # 测试数据
-│   └── triggers.sql   # 触发器与视图
+│   ├── triggers.sql   # 触发器与视图
+│   └── procedures.sql # 存储过程
 └── README.md
 ```
 
@@ -40,6 +41,7 @@
 mysql -u root -p你的密码 --default-character-set=utf8mb4 < D:/你的路径/database/init.sql
 mysql -u root -p你的密码 --default-character-set=utf8mb4 takeout < D:/你的路径/database/data.sql
 mysql -u root -p你的密码 --default-character-set=utf8mb4 takeout < D:/你的路径/database/triggers.sql
+mysql -u root -p你的密码 --default-character-set=utf8mb4 takeout < D:/你的路径/database/procedures.sql
 ```
 
 > ⚠️ `-p` 和密码之间**没有空格**！比如密码是 `root123` 就写 `-proot123`
@@ -131,4 +133,5 @@ npm run dev
 - ISA 继承结构（User → Customer / Merchant / Deliveryman）
 - 5 个触发器自动维护销量、配送状态联动
 - 3 个视图简化复杂查询（订单详情、商家统计、送餐员统计）
+- 1 个存储过程封装商家派单流程（状态校验 + 多表操作）
 - 完整的约束体系（CHECK、外键、NOT NULL、级联删除）
