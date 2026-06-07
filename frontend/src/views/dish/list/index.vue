@@ -1,0 +1,191 @@
+<template>
+  <div class="container">
+    <a-card class="general-card" title="菜品列表">
+      <template #extra>
+        <a-space>
+          <a-input-search
+            v-model="searchKeyword"
+            placeholder="搜索菜品"
+            style="width: 240px"
+            @search="fetchDishes"
+          />
+          <a-badge v-if="userStore.role === '顾客'" :count="cart.length">
+            <a-button type="primary" @click="openCart">
+              <template #icon><icon-shopping-cart /></template>
+              去下单
+            </a-button>
+          </a-badge>
+        </a-space>
+      </template>
+
+      <a-table
+        :columns="columns"
+        :data="dishList"
+        :pagination="pagination"
+        :loading="loading"
+        @page-change="onPageChange"
+      >
+        <template #price="{ record }">
+          ¥{{ record.price.toFixed(2) }}
+        </template>
+        <template #action="{ record }">
+          <a-button
+            v-if="userStore.role === '顾客'"
+            type="primary"
+            size="small"
+            @click="handleAddToCart(record)"
+          >
+            加入购物车
+          </a-button>
+        </template>
+      </a-table>
+    </a-card>
+
+    <!-- 下单对话框 -->
+    <a-modal v-model:visible="cartVisible" title="确认下单" @ok="handleSubmitOrder">
+      <a-form :model="orderForm">
+        <a-form-item label="已选菜品">
+          <div v-for="item in cart" :key="item.dishId" style="margin-bottom: 8px">
+            {{ item.dishName }} × {{ item.quantity }} = ¥{{ (item.price * item.quantity).toFixed(2) }}
+          </div>
+          <a-divider />
+          <strong>合计：¥{{ cartTotal.toFixed(2) }}</strong>
+        </a-form-item>
+        <a-form-item label="收货地址">
+          <a-select v-model="orderForm.addressId" placeholder="选择地址">
+            <a-option v-for="addr in addresses" :key="addr.addressId" :value="addr.addressId">
+              {{ addr.receiverName }} - {{ addr.detailAddress }}
+            </a-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="支付方式">
+          <a-select v-model="orderForm.paymentMethod" placeholder="选择支付方式">
+            <a-option value="微信支付">微信支付</a-option>
+            <a-option value="支付宝">支付宝</a-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+    </a-modal>
+  </div>
+</template>
+
+<script lang="ts" setup>
+  import { ref, reactive, computed, onMounted } from 'vue';
+  import { Message } from '@arco-design/web-vue';
+  import { getDishList } from '@/api/dish';
+  import { createOrder } from '@/api/order';
+  import { getAddressList } from '@/api/address';
+  import { useUserStore } from '@/store';
+
+  const userStore = useUserStore();
+  const loading = ref(false);
+  const dishList = ref<any[]>([]);
+  const searchKeyword = ref('');
+  const pagination = reactive({ current: 1, pageSize: 10, total: 0 });
+
+  const columns = [
+    { title: '菜品名称', dataIndex: 'dishName' },
+    { title: '价格', slotName: 'price' },
+    { title: '销量', dataIndex: 'totalSales' },
+    { title: '店铺', dataIndex: 'shopName' },
+    { title: '操作', slotName: 'action', width: 120 },
+  ];
+
+  // 购物车
+  const cart = ref<any[]>([]);
+  const cartVisible = ref(false);
+  const addresses = ref<any[]>([]);
+  const orderForm = reactive({ addressId: '', paymentMethod: '微信支付' });
+
+  const cartTotal = computed(() =>
+    cart.value.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  );
+
+  async function fetchDishes() {
+    loading.value = true;
+    try {
+      const res: any = await getDishList({
+        keyword: searchKeyword.value,
+        page: pagination.current,
+        pageSize: pagination.pageSize,
+      });
+      dishList.value = res.list;
+      pagination.total = res.total;
+    } finally {
+      loading.value = false;
+    }
+  }
+
+  function onPageChange(page: number) {
+    pagination.current = page;
+    fetchDishes();
+  }
+
+  function handleAddToCart(dish: any) {
+    const existing = cart.value.find((d) => d.dishId === dish.dishId);
+    if (existing) {
+      // 同一商家才能加
+      if (cart.value.length > 0 && cart.value[0].merchantId !== dish.merchantId) {
+        Message.warning('只能选择同一商家的菜品');
+        return;
+      }
+      existing.quantity += 1;
+    } else {
+      if (cart.value.length > 0 && cart.value[0].merchantId !== dish.merchantId) {
+        Message.warning('只能选择同一商家的菜品，已清空购物车');
+        cart.value = [];
+      }
+      cart.value.push({ ...dish, quantity: 1 });
+    }
+    Message.success(`已添加 ${dish.dishName}`);
+  }
+
+  async function handleSubmitOrder() {
+    if (cart.value.length === 0) {
+      Message.warning('购物车为空');
+      return;
+    }
+    if (!orderForm.addressId) {
+      Message.warning('请选择收货地址');
+      return;
+    }
+    try {
+      await createOrder({
+        merchantId: cart.value[0].merchantId,
+        addressId: orderForm.addressId,
+        paymentMethod: orderForm.paymentMethod,
+        dishes: cart.value.map((d) => ({ dishId: d.dishId, quantity: d.quantity })),
+      });
+      Message.success('下单成功');
+      cart.value = [];
+      cartVisible.value = false;
+    } catch (e) {
+      // error handled by interceptor
+    }
+  }
+
+  async function openCart() {
+    if (cart.value.length === 0) {
+      Message.warning('购物车为空');
+      return;
+    }
+    // 加载地址
+    const res: any = await getAddressList();
+    addresses.value = res;
+    cartVisible.value = true;
+  }
+
+  onMounted(() => {
+    fetchDishes();
+  });
+</script>
+
+<script lang="ts">
+  export default { name: 'DishList' };
+</script>
+
+<style scoped lang="less">
+  .container {
+    padding: 20px;
+  }
+</style>
