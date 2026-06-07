@@ -155,6 +155,8 @@ def update_dish():
             updates.append("DishName = %s")
             params.append(data['dishName'])
         if 'price' in data:
+            if not isinstance(data['price'], (int, float)) or data['price'] <= 0:
+                return fail_response(None, '价格必须大于0', 40000)
             updates.append("Price = %s")
             params.append(data['price'])
 

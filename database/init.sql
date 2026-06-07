@@ -148,4 +148,5 @@ CREATE TABLE `logistics` (
   CONSTRAINT `fk_logistics_order` FOREIGN KEY (`OrderID`) REFERENCES `orders`(`OrderID`)
     ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_logistics_deliveryman` FOREIGN KEY (`DeliverymanID`) REFERENCES `deliveryman`(`UserID`)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
