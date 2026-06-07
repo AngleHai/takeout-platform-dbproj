@@ -6,6 +6,29 @@ from utils.auth import token_required, role_required
 dish_bp = Blueprint('dish', __name__)
 
 
+@dish_bp.route('/dish/shops', methods=['GET'])
+@token_required
+def get_shop_list():
+    """获取有菜品的店铺列表（用于筛选）"""
+    conn = get_db_connection()
+    if not conn:
+        return fail_response(None, '数据库连接失败', 50000)
+
+    try:
+        query = """
+            SELECT DISTINCT m.UserID, m.ShopName
+            FROM merchant m
+            JOIN dish d ON m.UserID = d.MerchantID
+            ORDER BY m.ShopName
+        """
+        rows = execute_query(conn, query, fetch_all=True)
+        shops = [{'merchantId': r[0], 'shopName': r[1]} for r in rows]
+        return success_response(shops)
+    except Exception as e:
+        current_app.logger.error(f"获取店铺列表错误: {e}")
+        return fail_response(None, '服务器内部错误', 50000)
+
+
 @dish_bp.route('/dish/list', methods=['GET'])
 @token_required
 def get_dish_list():

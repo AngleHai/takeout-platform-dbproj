@@ -3,10 +3,21 @@
     <a-card class="general-card" title="菜品列表">
       <template #extra>
         <a-space>
+          <a-select
+            v-model="selectedShop"
+            placeholder="全部店铺"
+            allow-clear
+            style="width: 160px"
+            @change="onShopChange"
+          >
+            <a-option v-for="shop in shopList" :key="shop.merchantId" :value="shop.merchantId">
+              {{ shop.shopName }}
+            </a-option>
+          </a-select>
           <a-input-search
             v-model="searchKeyword"
             placeholder="搜索菜品"
-            style="width: 240px"
+            style="width: 200px"
             @search="fetchDishes"
           />
           <a-badge v-if="userStore.role === '顾客'" :count="cart.length">
@@ -29,14 +40,21 @@
           ¥{{ record.price.toFixed(2) }}
         </template>
         <template #action="{ record }">
-          <a-button
-            v-if="userStore.role === '顾客'"
-            type="primary"
-            size="small"
-            @click="handleAddToCart(record)"
-          >
-            加入购物车
-          </a-button>
+          <template v-if="userStore.role === '顾客'">
+            <a-space v-if="getCartQty(record.dishId) > 0" size="mini">
+              <a-button size="small" @click="changeCartQty(record, -1)">-</a-button>
+              <span style="min-width: 20px; text-align: center; display: inline-block">{{ getCartQty(record.dishId) }}</span>
+              <a-button size="small" @click="handleAddToCart(record)">+</a-button>
+            </a-space>
+            <a-button
+              v-else
+              type="primary"
+              size="small"
+              @click="handleAddToCart(record)"
+            >
+              加入购物车
+            </a-button>
+          </template>
         </template>
       </a-table>
     </a-card>
@@ -48,8 +66,15 @@
           <div class="cart-list">
             <div v-for="item in cart" :key="item.dishId" class="cart-item">
               <span class="cart-item-name">{{ item.dishName }}</span>
-              <span class="cart-item-qty">× {{ item.quantity }}</span>
+              <div class="cart-item-ctrl">
+                <a-button size="mini" @click="changeQty(item, -1)">-</a-button>
+                <span class="cart-item-qty">{{ item.quantity }}</span>
+                <a-button size="mini" @click="changeQty(item, 1)">+</a-button>
+              </div>
               <span class="cart-item-price">¥{{ (item.price * item.quantity).toFixed(2) }}</span>
+              <a-button size="mini" type="text" status="danger" @click="removeFromCart(item)">
+                删除
+              </a-button>
             </div>
           </div>
         </a-form-item>
@@ -78,7 +103,7 @@
 <script lang="ts" setup>
   import { ref, reactive, computed, onMounted } from 'vue';
   import { Message } from '@arco-design/web-vue';
-  import { getDishList } from '@/api/dish';
+  import { getDishList, getShopList } from '@/api/dish';
   import { createOrder } from '@/api/order';
   import { getAddressList } from '@/api/address';
   import { useUserStore } from '@/store';
@@ -87,6 +112,8 @@
   const loading = ref(false);
   const dishList = ref<any[]>([]);
   const searchKeyword = ref('');
+  const selectedShop = ref('');
+  const shopList = ref<any[]>([]);
   const pagination = reactive({ current: 1, pageSize: 10, total: 0 });
 
   const columns = [
@@ -94,7 +121,7 @@
     { title: '价格', slotName: 'price' },
     { title: '销量', dataIndex: 'totalSales' },
     { title: '店铺', dataIndex: 'shopName' },
-    { title: '操作', slotName: 'action', width: 120 },
+    { title: '操作', slotName: 'action', width: 160 },
   ];
 
   // 购物车
@@ -111,6 +138,7 @@
     loading.value = true;
     try {
       const res: any = await getDishList({
+        merchantId: selectedShop.value || undefined,
         keyword: searchKeyword.value,
         page: pagination.current,
         pageSize: pagination.pageSize,
@@ -122,6 +150,11 @@
     }
   }
 
+  function onShopChange() {
+    pagination.current = 1;
+    fetchDishes();
+  }
+
   function onPageChange(page: number) {
     pagination.current = page;
     fetchDishes();
@@ -130,7 +163,6 @@
   function handleAddToCart(dish: any) {
     const existing = cart.value.find((d) => d.dishId === dish.dishId);
     if (existing) {
-      // 同一商家才能加
       if (cart.value.length > 0 && cart.value[0].merchantId !== dish.merchantId) {
         Message.warning('只能选择同一商家的菜品');
         return;
@@ -144,6 +176,35 @@
       cart.value.push({ ...dish, quantity: 1 });
     }
     Message.success(`已添加 ${dish.dishName}`);
+  }
+
+  function changeQty(item: any, delta: number) {
+    item.quantity += delta;
+    if (item.quantity <= 0) {
+      removeFromCart(item);
+    }
+  }
+
+  function removeFromCart(item: any) {
+    cart.value = cart.value.filter((d) => d.dishId !== item.dishId);
+    if (cart.value.length === 0) {
+      cartVisible.value = false;
+    }
+  }
+
+  function getCartQty(dishId: string) {
+    const item = cart.value.find((d) => d.dishId === dishId);
+    return item ? item.quantity : 0;
+  }
+
+  function changeCartQty(dish: any, delta: number) {
+    const existing = cart.value.find((d) => d.dishId === dish.dishId);
+    if (existing) {
+      existing.quantity += delta;
+      if (existing.quantity <= 0) {
+        cart.value = cart.value.filter((d) => d.dishId !== dish.dishId);
+      }
+    }
   }
 
   async function handleSubmitOrder() {
@@ -181,7 +242,13 @@
     cartVisible.value = true;
   }
 
+  async function fetchShops() {
+    const res: any = await getShopList();
+    shopList.value = res;
+  }
+
   onMounted(() => {
+    fetchShops();
     fetchDishes();
   });
 </script>
@@ -213,8 +280,16 @@
     text-overflow: ellipsis;
   }
 
+  .cart-item-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    margin: 0 12px;
+  }
+
   .cart-item-qty {
-    width: 50px;
+    width: 24px;
     text-align: center;
     flex-shrink: 0;
   }

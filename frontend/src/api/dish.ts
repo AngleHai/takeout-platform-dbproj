@@ -24,6 +24,10 @@ export function getDishList(params: {
   return axios.get('/api/dish/list', { params });
 }
 
+export function getShopList() {
+  return axios.get('/api/dish/shops');
+}
+
 export function addDish(data: { dishName: string; price: number }) {
   return axios.post('/api/dish/add', data);
 }
