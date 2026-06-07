@@ -114,9 +114,7 @@ CREATE TABLE `orders` (
   `OrderTime`      DATETIME      NOT NULL  COMMENT '下单时间',
   `DeliveryStatus` VARCHAR(20)   NOT NULL  DEFAULT '已接单' COMMENT '配送状态',
   PRIMARY KEY (`OrderID`),
-  CONSTRAINT `fk_order_customer` FOREIGN KEY (`CustomerID`) REFERENCES `customer`(`UserID`),
   CONSTRAINT `fk_order_merchant` FOREIGN KEY (`MerchantID`) REFERENCES `merchant`(`UserID`),
-  CONSTRAINT `fk_order_address`  FOREIGN KEY (`AddressID`, `CustomerID`) REFERENCES `address`(`AddressID`, `CustomerID`),
   CONSTRAINT `chk_order_amount`  CHECK (`OrderAmount` >= 0),
   CONSTRAINT `chk_delivery_status` CHECK (`DeliveryStatus` IN ('已接单', '配送中', '已完成', '已取消'))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

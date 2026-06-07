@@ -108,6 +108,9 @@ def delete_user():
 
         # 删除子表记录
         if role == '顾客':
+            # 清理该顾客订单的物流记录
+            execute_query(conn, "DELETE FROM logistics WHERE OrderID IN (SELECT OrderID FROM orders WHERE CustomerID = %s)", (user_id,))
+            # 历史订单保留（不删 orders 和 order_dish，避免触发器错误回退销量）
             execute_query(conn, "DELETE FROM address WHERE CustomerID = %s", (user_id,))
             execute_query(conn, "DELETE FROM customer WHERE UserID = %s", (user_id,))
         elif role == '商家':
