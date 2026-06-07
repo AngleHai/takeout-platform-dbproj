@@ -97,7 +97,7 @@ npm run dev
 
 ### 第五步：打开浏览器
 
-访问 http://localhost:5173，用下面的账号登录。
+访问 http://localhost:5173/ ，用下面的账号登录。
 
 ---
 
